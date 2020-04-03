@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Product } from '../product.interface';
 import { ProductService } from '../product.service';
-import { Observable } from 'rxjs';
+import { Observable, EMPTY } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-list',
@@ -14,6 +15,26 @@ export class ProductListComponent implements OnInit {
 //  products: Product[];
   products$: Observable<Product[]>;
   selectedProduct: Product;
+  errorMessage: string;
+
+  // Pagination
+  pageSize = 5;
+  start = 0;
+  end = this.pageSize;
+  currentPage = 1;
+
+  previousPage(): void {
+    this.start -= this.pageSize;
+    this.end -= this.pageSize;
+    this.currentPage--;
+    this.selectedProduct = null;
+  }
+  nextPage(): void {
+    this.start += this.pageSize;
+    this.end += this.pageSize;
+    this.currentPage++;
+    this.selectedProduct = null;
+  }
 
   onSelect(product: Product): void {
     this.selectedProduct = product;
@@ -25,7 +46,15 @@ export class ProductListComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.products$ = this.productService.products$;
+    this.products$ = this
+                      .productService
+                      .products$
+                      .pipe(
+                        catchError(error => {
+                          this.errorMessage = error;
+                          return EMPTY;
+                        })
+                      );
 
     // this
     //   .productService
